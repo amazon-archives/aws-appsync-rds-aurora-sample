@@ -1,0 +1,833 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template for the AppSync RDS over Lambda sample
+
+Parameters:
+  APIName:
+    Type: String
+    Description: The name for the AppSync GraphQL API to be created.
+    Default: AWSAppSyncRDSLambdaBlog
+    MinLength: 1
+    MaxLength: 32
+
+  # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html
+  RDSDBName:
+    AllowedPattern: ^[a-zA-Z0-9]+$
+    Type: String
+    Description: The name of the RDS database to be created.
+    MinLength: 1
+    MaxLength: 63
+    Default: AWSAppSyncDB
+  RDSUsername:
+    AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*$
+    Type: String
+    Description: The username to be used in the RDS connection.
+    MinLength: 1
+    MaxLength: 16
+  RDSPassword:
+    AllowedPattern: ^[a-zA-Z0-9]+$
+    ConstraintDescription: Must be between 8 to 41 alphanumeric characters.
+    Type: String
+    Description: The password to be used in the RDS connection.
+    MinLength: 8
+    MaxLength: 41
+
+Outputs:
+  GraphQLApiId:
+    Description: Unique AWS AppSync GraphQL API identifier
+    Value: !GetAtt AppSyncRDSAPI.ApiId
+  UserPoolId:
+    Description: Unique AWS Cognito user pool identifier
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Description: Unique AWS Cognito user pool client identifier
+    Value: !Ref UserPoolClient  
+  LambdaDataSourceArn:
+    Description: The ARN for the Lambda used as the GraphQL data source
+    Value: !GetAtt AppSyncRDSLambda.Arn
+  RDSDBClusterEndpoint:
+    Description: The endpoint for the RDS cluster
+    Value: !GetAtt AppSyncRDSCluster.Endpoint.Address  
+
+Resources:
+
+  #Cognito resources
+  UserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+        UnusedAccountValidityDays: 7
+      AutoVerifiedAttributes:
+        - phone_number
+      MfaConfiguration: OPTIONAL
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireLowercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: false
+      UserPoolName: AppSyncRDSLambdaPool
+      Schema:
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+        - Name: phone_number
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+      SmsConfiguration:
+        SnsCallerArn: !GetAtt SNSRole.Arn
+        ExternalId: AppSyncRDSLambda-external
+      UserPoolTags:
+        AWSAppSyncCreatedResource: 
+          Fn::Sub:
+          - "CloudFormation Stack ${StackName}"
+          - StackName: !Ref "AWS::StackName"
+          
+
+  SNSRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "cognito-idp.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "CognitoSNSPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "sns:publish"
+                Resource: "*"
+
+  UserPoolClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties:
+      ClientName: AppSyncRDSLambdaClient
+      GenerateSecret: false
+      UserPoolId: !Ref UserPool
+
+  #AppSync resources
+  AppSyncRDSAPI:
+    Type: "AWS::AppSync::GraphQLApi"
+    Properties:
+      Name: !Sub ${APIName}
+      AuthenticationType: "AMAZON_COGNITO_USER_POOLS"
+      UserPoolConfig:
+        UserPoolId: !Ref UserPool
+        AwsRegion: !Ref "AWS::Region"
+        DefaultAction: ALLOW
+
+  AppSyncRDSAPISchema:
+    Type: "AWS::AppSync::GraphQLSchema"
+    DependsOn:
+      - AppSyncRDSAPI
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      Definition: |
+        type Comment {
+          id: ID!
+          postId: String!
+          author: String!
+          content: String!
+          upvotes: Int
+          downvotes: Int
+        }
+
+        type Mutation {
+          createComment(postId: String!, author: String!, content: String!): Comment
+          upvoteComment(id: ID!): Comment
+          downvoteComment(id: ID!): Comment
+          createPost(author: String!, content: String!): Post
+          incrementViewCount(id: String!): Post
+        }
+
+        type Post {
+          id: ID!
+          author: String!
+          content: String!
+          views: Int
+        }
+
+        type Query {
+          getCommentsOnPost(postId: String!): [Comment]
+          getNumberOfCommentsOnPost(postId: String!): Int
+          getCommentsByAuthor(author: String!): [Comment]
+          getPost(id: String!): Post
+          getPostsByAuthor(author: String!): [Post]
+        }
+
+        type Subscription {
+          addedCommentOnPost(postId: String!): Comment
+            @aws_subscribe(mutations: ["createComment"])
+          addedCommentByAuthor(author: String!): Comment
+            @aws_subscribe(mutations: ["createComment"])
+          addedPostByAuthor(author: String!): Post
+            @aws_subscribe(mutations: ["createPost"])
+        }
+
+        schema {
+          query: Query
+          mutation: Mutation
+          subscription: Subscription
+        }
+
+  AppSyncRDSServiceRole:
+     Type: AWS::IAM::Role
+     Properties:
+       AssumeRolePolicyDocument:
+         Version: '2012-10-17'
+         Statement:
+         - Effect: Allow
+           Principal:
+             Service:
+             - appsync.amazonaws.com
+           Action:
+           - sts:AssumeRole
+  AppSyncLambdaInvokePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AppSyncLambdaInvokePolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - lambda:*
+          Resource: !GetAtt AppSyncRDSLambda.Arn
+      Roles:
+      - !Ref AppSyncRDSServiceRole
+
+  AppSyncRDSLambdaDataSource:
+    Type: "AWS::AppSync::DataSource"
+    DependsOn:
+      - AppSyncRDSAPI
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      Name: "CommentsLambdaDataSource"
+      Description: "A DataSource for Comments in RDS via Lambda."
+      Type: "AWS_LAMBDA"
+      ServiceRoleArn: !GetAtt AppSyncRDSServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt AppSyncRDSLambda.Arn
+
+  AppSyncRDSLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Role: !GetAtt AppSyncRDSLambdaExecutionRole.Arn
+      Code:
+        S3Bucket:
+          Fn::Sub:
+            - "awsappsync-${RegionSuffix}"
+            - RegionSuffix: !Ref "AWS::Region"
+        S3Key: samples/rds-over-lambda-sample/AppSyncRDSLambdaSampleCode.zip
+      Handler: index.handler
+      MemorySize: 256
+      Runtime: "nodejs8.10"
+      Timeout: "60"
+      ReservedConcurrentExecutions: 100
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      Environment:
+        Variables:
+          USERNAME: !Sub ${RDSUsername}
+          PASSWORD: !Sub ${RDSPassword}
+          ENDPOINT: !GetAtt AppSyncRDSCluster.Endpoint.Address
+          DBNAME: !Sub ${RDSDBName}
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt AppSyncRDSVPC.DefaultSecurityGroup
+        SubnetIds:
+          - !Ref AppSyncRDSSubnetPrivateA
+          - !Ref AppSyncRDSSubnetPrivateB
+
+  AppSyncRDSResolverCreateComment:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Mutation"
+      FieldName: "createComment"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+       {
+           "version" : "2017-02-28",
+           "operation": "Invoke",
+           #set($id = $util.autoId())
+           "payload": {
+             "sql":"INSERT INTO comments VALUES ('$id', :AUTHOR, :POST_ID, :CONTENT, 1, 0)",
+             "variableMapping": {
+               ":AUTHOR" : "$context.arguments.author",
+               ":POST_ID" : "$context.arguments.postId",
+               ":CONTENT" : "$context.arguments.content"
+             },
+             "responseSQL": "SELECT id, postId, author, content, upvotes, downvotes FROM comments WHERE id = '$id'"
+           }
+       }
+
+      ResponseMappingTemplate: |
+        $util.toJson($context.result[0])
+
+  AppSyncRDSResolverUpvoteComment:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Mutation"
+      FieldName: "upvoteComment"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"UPDATE comments SET upvotes = upvotes + 1 WHERE id = :COMMENT_ID",
+              "variableMapping": {
+                ":COMMENT_ID" : "$context.arguments.id"
+              },
+              "responseSQL": "SELECT id, upvotes, downvotes FROM comments WHERE id = :COMMENT_ID"
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result[0])
+
+  AppSyncRDSResolverDownvoteComment:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Mutation"
+      FieldName: "downvoteComment"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"UPDATE comments SET downvotes = downvotes + 1 WHERE id = :COMMENT_ID",
+              "variableMapping": {
+                ":COMMENT_ID" : "$context.arguments.id"
+              },
+              "responseSQL": "SELECT id, upvotes, downvotes FROM comments WHERE id = :COMMENT_ID"
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result[0])
+
+  AppSyncRDSResolverCreatePost:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Mutation"
+      FieldName: "createPost"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            #set($id = $util.autoId())
+            "payload": {
+              "sql":"INSERT INTO posts VALUES ('$id', :AUTHOR, :CONTENT, 1)",
+              "variableMapping": {
+                ":AUTHOR" : "$context.arguments.author",
+                ":CONTENT" : "$context.arguments.content"
+              },
+              "responseSQL": "SELECT id, author, content, views FROM posts WHERE id = '$id'"
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result[0])
+
+  AppSyncRDSResolverIncrementViewCount:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Mutation"
+      FieldName: "incrementViewCount"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"UPDATE posts SET views = views + 1 WHERE id = :POST_ID",
+              "variableMapping": {
+                ":POST_ID" : "$context.arguments.id"
+              },
+              "responseSQL": "SELECT id, views FROM posts WHERE id = :POST_ID"
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result[0])
+
+  AppSyncRDSResolverGetCommentsOnPost:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Query"
+      FieldName: "getCommentsOnPost"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"SELECT * FROM comments WHERE postId = :POST_ID ORDER BY upvotes DESC",
+              "variableMapping": {
+                ":POST_ID" : "$context.arguments.postId"
+              }
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+
+  AppSyncRDSResolverGetNumberOfCommentsOnPost:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Query"
+      FieldName: "getNumberOfCommentsOnPost"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"SELECT COUNT(*) AS totalCount FROM comments WHERE postId = :POST_ID ORDER BY upvotes DESC",
+              "variableMapping": {
+                ":POST_ID" : "$context.arguments.postId"
+              }
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result[0].totalCount)
+
+  AppSyncRDSResolverGetCommentsByAuthor:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Query"
+      FieldName: "getCommentsByAuthor"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"SELECT * FROM comments WHERE author = :AUTHOR ORDER BY upvotes DESC",
+              "variableMapping": {
+                ":AUTHOR" : "$context.arguments.author"
+              }
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+
+  AppSyncRDSResolverGetPost:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Query"
+      FieldName: "getPost"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"SELECT * FROM posts WHERE id = :POST_ID",
+              "variableMapping": {
+                ":POST_ID" : "$context.arguments.id"
+              }
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result[0])
+
+  AppSyncRDSResolverGetPostsByAuthor:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Query"
+      FieldName: "getPostsByAuthor"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"SELECT * FROM posts WHERE author = :AUTHOR ORDER BY views DESC",
+              "variableMapping": {
+                ":AUTHOR" : "$context.arguments.author"
+              }
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+
+  #Lambda and access role
+  AppSyncRDSLambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+  #VPC and security group
+  AppSyncRDSVPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  AppSyncRDSSubnetA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.10.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+
+  AppSyncRDSSubnetB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.11.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+
+  AppSyncRDSSubnetPrivateA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.20.0/24
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+
+  AppSyncRDSSubnetPrivateB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.21.0/24
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+
+  AppSyncRDSInternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  AppSyncRDSInternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref AppSyncRDSInternetGateway
+      VpcId: !Ref AppSyncRDSVPC
+
+  AppSyncRDSNatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: AppSyncRDSInternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  AppSyncRDSNatGateway2EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: AppSyncRDSInternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  AppSyncRDSNatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt AppSyncRDSNatGateway1EIP.AllocationId
+      SubnetId: !Ref AppSyncRDSSubnetA
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  AppSyncRDSNatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt AppSyncRDSNatGateway2EIP.AllocationId
+      SubnetId: !Ref AppSyncRDSSubnetB
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  AppSyncRDSPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  AppSyncRDSDefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AppSyncRDSInternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref AppSyncRDSInternetGateway
+
+  AppSyncRDSPublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPublicRouteTable
+      SubnetId: !Ref AppSyncRDSSubnetA
+
+  AppSyncRDSPublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPublicRouteTable
+      SubnetId: !Ref AppSyncRDSSubnetB
+
+  AppSyncRDSPrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  AppSyncRDSDefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref AppSyncRDSNatGateway1
+
+  AppSyncRDSPrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPrivateRouteTable1
+      SubnetId: !Ref AppSyncRDSSubnetPrivateA
+
+  AppSyncRDSPrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  AppSyncRDSDefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref AppSyncRDSNatGateway2
+
+  AppSyncRDSPrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPrivateRouteTable2
+      SubnetId: !Ref AppSyncRDSSubnetPrivateB
+
+  NoIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "appsync-no-ingress-sg"
+      GroupDescription: "Security group with no ingress rule"
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  #RDS cluster and other related resources
+  AppSyncRDSCluster:
+    Type: "AWS::RDS::DBCluster"
+    Properties:
+      MasterUsername: !Sub ${RDSUsername}
+      MasterUserPassword: !Sub ${RDSPassword}
+      DBSubnetGroupName: !Ref AppSyncRDSDBSubnetGroup
+      Engine: aurora-mysql
+      EngineVersion: "5.7"
+      DatabaseName: AppSyncRDSDB
+      BackupRetentionPeriod: 3
+      DBClusterParameterGroupName: !Ref AppSyncRDSDBClusterParameterGroup
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      VpcSecurityGroupIds:
+        - !GetAtt AppSyncRDSVPC.DefaultSecurityGroup
+
+  AppSyncRDSInstance:
+    Type: "AWS::RDS::DBInstance"
+    Properties:
+      DBInstanceIdentifier:
+        Fn::Sub:
+          - "AppSyncRDSInstance-${APIId}"
+          - APIId: !GetAtt AppSyncRDSAPI.ApiId
+      DBInstanceClass: db.t2.medium
+      DBSubnetGroupName: !Ref AppSyncRDSDBSubnetGroup
+      Engine: aurora-mysql
+      EngineVersion: "5.7"
+      PubliclyAccessible: false
+      DBParameterGroupName: !Ref AppSyncRDSDBParameterGroup
+      DBClusterIdentifier: !Ref AppSyncRDSCluster
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+
+  AppSyncRDSDBSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: Subnet group for the AppSync RDS cluster.
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      SubnetIds:
+        - !Ref AppSyncRDSSubnetA
+        - !Ref AppSyncRDSSubnetB
+
+  AppSyncRDSDBClusterParameterGroup:
+    Type: AWS::RDS::DBClusterParameterGroup
+    Properties:
+      Description: Parameter group for the AppSync RDS DB, for use in the RDS over Lambda sample.
+      Family: aurora-mysql5.7
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      Parameters:
+        character_set_database: "utf32"
+
+  AppSyncRDSDBParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: Parameter group for the AppSync RDS DB instance, for use in the RDS over Lambda sample.
+      Family: aurora-mysql5.7
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: 
+            Fn::Sub:
+            - "CloudFormation Stack ${StackName}"
+            - StackName: !Ref "AWS::StackName"
+      Parameters:
+        sql_mode: IGNORE_SPACE
+        max_connections: 100
+        wait_timeout: 900
+        interactive_timeout: 900
