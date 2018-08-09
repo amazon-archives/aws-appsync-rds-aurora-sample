@@ -1,0 +1,68 @@
+{
+  "name": "bignumber.js",
+  "description": "A library for arbitrary-precision decimal and non-decimal arithmetic",
+  "version": "4.1.0",
+  "keywords": [
+    "arbitrary",
+    "precision",
+    "arithmetic",
+    "big",
+    "number",
+    "decimal",
+    "float",
+    "biginteger",
+    "bigdecimal",
+    "bignumber",
+    "bigint",
+    "bignum"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MikeMcl/bignumber.js.git"
+  },
+  "main": "bignumber.js",
+  "types": "bignumber.d.ts",
+  "author": {
+    "name": "Michael Mclaughlin",
+    "email": "M8ch88l@gmail.com"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "node ./test/every-test.js",
+    "build": "uglifyjs bignumber.js --source-map bignumber.js.map -c -m -o bignumber.min.js --preamble \"/* bignumber.js v4.1.0 https://github.com/MikeMcl/bignumber.js/LICENCE */\""
+  },
+  "gitHead": "e545d41b2f43874399101ac7ee5098093ac96b6b",
+  "bugs": {
+    "url": "https://github.com/MikeMcl/bignumber.js/issues"
+  },
+  "homepage": "https://github.com/MikeMcl/bignumber.js#readme",
+  "_id": "bignumber.js@4.1.0",
+  "_npmVersion": "5.0.4",
+  "_nodeVersion": "8.5.0",
+  "_npmUser": {
+    "name": "mikemcl",
+    "email": "M8ch88l@gmail.com"
+  },
+  "dist": {
+    "integrity": "sha512-eJzYkFYy9L4JzXsbymsFn3p54D+llV27oTQ+ziJG7WFRheJcNZilgVXMG0LoZtlQSKBsJdWtLFqOD0u+U0jZKA==",
+    "shasum": "db6f14067c140bd46624815a7916c92d9b6c24b1",
+    "tarball": "https://registry.npmjs.org/bignumber.js/-/bignumber.js-4.1.0.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "mikemcl",
+      "email": "M8ch88l@gmail.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/bignumber.js-4.1.0.tgz_1506461103217_0.030498685780912638"
+  },
+  "directories": {},
+  "_shasum": "db6f14067c140bd46624815a7916c92d9b6c24b1",
+  "_resolved": "https://registry.npmjs.org/bignumber.js/-/bignumber.js-4.1.0.tgz",
+  "_from": "bignumber.js@4.1.0"
+}

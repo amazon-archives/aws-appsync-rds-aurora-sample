@@ -1,0 +1,109 @@
+{
+  "name": "sqlstring",
+  "description": "Simple SQL escape and format for MySQL",
+  "version": "2.3.1",
+  "contributors": [
+    {
+      "name": "Adri Van Houdt",
+      "email": "adri.van.houdt@gmail.com"
+    },
+    {
+      "name": "Douglas Christopher Wilson",
+      "email": "doug@somethingdoug.com"
+    },
+    {
+      "name": "fengmk2",
+      "email": "fengmk2@gmail.com",
+      "url": "http://fengmk2.github.com"
+    },
+    {
+      "name": "Kevin Jose Martin",
+      "email": "kevin@tiliq.com"
+    },
+    {
+      "name": "Nathan Woltman",
+      "email": "nwoltman@outlook.com"
+    },
+    {
+      "name": "Sergej Sintschilin",
+      "email": "seregpie@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "sqlstring",
+    "sql",
+    "escape",
+    "sql escape"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mysqljs/sqlstring.git"
+  },
+  "devDependencies": {
+    "beautify-benchmark": "0.2.4",
+    "benchmark": "2.1.4",
+    "eslint": "4.18.1",
+    "eslint-plugin-markdown": "1.0.0-beta.6",
+    "nyc": "10.3.2",
+    "urun": "0.0.8",
+    "utest": "0.0.8"
+  },
+  "files": [
+    "lib/",
+    "HISTORY.md",
+    "LICENSE",
+    "README.md",
+    "index.js"
+  ],
+  "engines": {
+    "node": ">= 0.6"
+  },
+  "scripts": {
+    "bench": "node benchmark/index.js",
+    "lint": "eslint --plugin markdown --ext js,md .",
+    "test": "node test/run.js",
+    "test-ci": "nyc --reporter=text npm test",
+    "test-cov": "nyc --reporter=html --reporter=text npm test"
+  },
+  "gitHead": "8f193cae10a2208010102fd50f0b61e869e14dcb",
+  "bugs": {
+    "url": "https://github.com/mysqljs/sqlstring/issues"
+  },
+  "homepage": "https://github.com/mysqljs/sqlstring#readme",
+  "_id": "sqlstring@2.3.1",
+  "_shasum": "475393ff9e91479aea62dcaf0ca3d14983a7fb40",
+  "_from": "sqlstring@2.3.1",
+  "_npmVersion": "3.10.10",
+  "_nodeVersion": "6.11.1",
+  "_npmUser": {
+    "name": "dougwilson",
+    "email": "doug@somethingdoug.com"
+  },
+  "dist": {
+    "shasum": "475393ff9e91479aea62dcaf0ca3d14983a7fb40",
+    "tarball": "https://registry.npmjs.org/sqlstring/-/sqlstring-2.3.1.tgz",
+    "fileCount": 6,
+    "unpackedSize": 17037
+  },
+  "maintainers": [
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    },
+    {
+      "name": "fengmk2",
+      "email": "fengmk2@gmail.com"
+    },
+    {
+      "name": "sidorares",
+      "email": "sidorares@yandex.com"
+    }
+  ],
+  "directories": {},
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/sqlstring_2.3.1_1519516938645_0.9513261619591036"
+  },
+  "_resolved": "https://registry.npmjs.org/sqlstring/-/sqlstring-2.3.1.tgz"
+}
