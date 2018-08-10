@@ -2,7 +2,11 @@
 
 ## Introduction
 
-This sample application will create all of the AWS resources you need to have an AppSync GraphQL API that fronts an RDS Aurora cluster, doing so via a Lambda function. All resources are created with AWS CloudFormation. Specifically, it will provision the AppSync API (including the schema, data source, and all resolvers), the Cognito user pool used for authorization, an RDS cluster that runs on Amazon Aurora MySQL, and a Lambda function to serve as the go-between. Both the Lambda function and the RDS resources will reside in a newly created VPC. This sample will work out of the box in every region that AppSync is available, and will show how you can use GraphQL to interact with your database, as well as how the requests translate into SQL. You can use this sample application for learning purposes or adapt the resources to meet your own needs.
+This sample application will create all of the AWS resources you need to have an AppSync GraphQL API that fronts an RDS Aurora cluster, doing so via a Lambda function. All resources are created with AWS CloudFormation. 
+
+Specifically, it will provision the AppSync API (including the schema, data source, and all resolvers), the Cognito user pool used for authorization, an RDS cluster that runs on Amazon Aurora MySQL, and a Lambda function to serve as the go-between. Both the Lambda function and the RDS resources will reside in a newly created VPC. 
+
+This sample will work out of the box in every region that AppSync is available, and will show how you can use GraphQL to interact with your database, as well as how the requests translate into SQL. You can use this sample application for learning purposes or adapt the resources to meet your own needs.
 
 ## Features
 The schema is a light blog design - the out of the box types are 'Posts' and 'Comments'.
@@ -34,11 +38,11 @@ The schema is a light blog design - the out of the box types are 'Posts' and 'Co
   * The RDS cluster runs Aurora MySQL 5.7
   * The RDS instance is a t2.medium
 
-## AWS Setup
+## Setting up the Sample
 
 ### Create CloudFormation Stack
 
-The sample spins up several AWS resources via CloudFormation, as described above. Step one to using it is having CloudFormation create the stack. Note the AppSync GraphQL API name when you're creating it - it's an input in creating the stack, and will be necessary later. Creating the stack can be done any of the following ways:
+The sample spins up several AWS resources via CloudFormation, so step one to using it is creating the CloudFormation stack. Note the AppSync GraphQL API name when you're creating it - it's an input in creating the stack, and will be necessary later. Creating the stack can be done any of the following ways:
 
 #### From Here
 
@@ -64,6 +68,14 @@ The AppSync console has the new sample added as well, entitled 'Blog App'. It wi
 
 If you want to customize your own version of the template, that can easily be done by using this repository. Just download [the template](https://github.com/aws-samples/AWS-AppSync-rds-aurora-sample/blob/master/src/appsyncrdslambdasampletemplate.yaml), customize it to fit your own needs, then upload it to the CloudFormation console.
 
+##### Customizing the Lambda
+
+By default, the CloudFormation template will pull the Lambda code from an S3 bucket owned by AppSync. It's possible to simply update the Lambda code once it's deployed, which might be quicker for testing purposes, but you might want to customize the original code that gets pulled if your needs are more complex or require multiple stack builds. You can easily customize this Lambda code to fit your own needs using this repository. The entirety of what is pulled from the AppSync S3 bucket is in the src/lambdaresolver directory. Pull the contents of that directory, and customize the index.js file as needed. 
+
+Lambda requires a specific format for code it executes - it must be inside a zip file with only the contents of the lambdaresolver directory, *not a zip of the lambdaresolver directory*. You'll need to upload that zip file to an S3 bucket in your own account, and then update the CloudFormation template to point to that S3 bucket and key. Also note that you'll need to update the 'Handler' field in the same resource if you re-name index.js. Both of these fields are in the 'AppSyncRDSLambda' resource in the template. 
+
+This sample uses some SQL to set up the database and necessary tables during the Lambda function's execution. You'll likely want to remove that code when customizing it. 
+
 ### Setting Up Authorization
 
 The sample uses [Cognito User Pools](https://docs.aws.amazon.com/appsync/latest/devguide/security.html#amazon-cognito-user-pools-authorization) for authorization. Now that the sample stack has been created, the next step is creating a Cognito user to sign in. The easiest way to do this is by first going to the Cognito console. From there, click 'Manage User Pools'. Next, you will see a list of different user pools under your account. By default, the sample will create one with the name 'AppSyncRDSLambdaPool' - click into that. You'll need two things from this console:
@@ -76,7 +88,7 @@ You'll need a user to exist under this pool to sign in with on the AppSync conso
 
 ![Creating a user](images/creating-user.png)
 
-Input a username for the user and a temporary password. Insert your phone number (with the country code, of the format +15555555555) in the 'Phone Number' field, check 'SMS (default)', and uncheck 'Mark email as verified'. This will text your phone with the username and temporary password for the user. If you don't enter a temporary password, a random one will be auto-generated for you. This will create the user with status 'FORCE_CHANGE_PASSWORD', which is Cognito's way of making sure a created user changes their password before they're able to sign in successfully. The AppSync console will take care of this for you.
+Input a username for the user and a temporary password. Insert your phone number (with the country code, of the format +15555555555) in the 'Phone Number' field, check 'SMS (default)', and uncheck 'Mark email as verified'. This will text your phone with the username and temporary password for the user. If you don't enter a temporary password, a random one will be auto-generated for you. This will create the user with status 'FORCE_CHANGE_PASSWORD', which is Cognito's way of making sure an ['admin-created user'](https://docs.aws.amazon.com/cognito/latest/developerguide/how-to-create-user-accounts.html) changes their password before they're able to sign in successfully. The AppSync console will take care of this for you.
 
 #### Authorizing on the AppSync Console
 
@@ -84,9 +96,11 @@ There's one last step before you're ready to play with the sample. Go to the App
 
 ![Sign in](images/signin-appsync.png)
 
-Once you sign in with the username and temporary password you used, the console will prompt you to give a new password. This is normal for 'admin-created users', which is what we did on the Cognito console earlier. We have to change it once to get the user out of state 'FORCE_CHANGE_PASSWORD'. Use whatever password you like - this will be permanent.
+Once you sign in with the username and temporary password you used, the console will prompt you to give a new password. This is normal for 'admin-created users'. We have to change it once to get the user out of state 'FORCE_CHANGE_PASSWORD'. Use whatever password you like - this will be permanent.
 
 ![Changing password](images/signin-appsync-2.png)
+
+## Using the Sample
 
 ## License Summary
 
