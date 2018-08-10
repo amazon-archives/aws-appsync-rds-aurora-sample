@@ -76,6 +76,21 @@ Lambda requires a specific format for code it executes - it must be inside a zip
 
 This sample uses some SQL to set up the database and necessary tables during the Lambda function's execution. You'll likely want to remove that code when customizing it. 
 
+If you do change the SQL and/or GraphQL schema, you'll likely want to look at the [resolver mapping templates](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-mapping-template-reference-overview.html) in the AppSync console. These handle the logic that translates the GraphQL requests into SQL. The below example is used to get a post:
+
+```
+{
+    "version" : "2017-02-28",
+    "operation": "Invoke",
+    "payload": {
+        "sql":"SELECT * FROM posts WHERE id = :POST_ID",
+        "variableMapping": {
+            ":POST_ID" : "$context.arguments.id"
+        }
+    }
+}
+```
+
 ### Setting Up Authorization
 
 The sample uses [Cognito User Pools](https://docs.aws.amazon.com/appsync/latest/devguide/security.html#amazon-cognito-user-pools-authorization) for authorization. Now that the sample stack has been created, the next step is creating a Cognito user to sign in. The easiest way to do this is by first going to the Cognito console. From there, click 'Manage User Pools'. Next, you will see a list of different user pools under your account. By default, the sample will create one with the name 'AppSyncRDSLambdaPool' - click into that. You'll need two things from this console:
@@ -184,6 +199,7 @@ subscription AddedCommentByAuthor{
   }
 }
 ```
+
 
 ## License Summary
 
