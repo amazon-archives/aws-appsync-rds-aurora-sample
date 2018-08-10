@@ -102,6 +102,89 @@ Once you sign in with the username and temporary password you used, the console 
 
 ## Using the Sample
 
+Now you're free to use the sample! Here's some queries and mutations to get you started:
+
+Create a new post:
+```
+mutation CreatePost{
+  createPost(author:"Shaggy", content:"Test Post"){
+    id
+    author
+    content
+    views
+  }
+}
+```
+Let's say the id that was returned was "123"
+
+Increment the view count of that post:
+```
+mutation IncrementViewCount{
+  incrementViewCount(id:"123"){
+    id
+    views
+  }
+}
+```
+
+Then to get that post:
+```
+query GetPost{
+  getPost(id:"123"){
+    id
+    author
+    content
+    views
+  }
+}
+```
+
+Now, let's comment on that post:
+```
+mutation CreateComment{
+  createComment(postId:"123", author:"Nadia", content:"Test"){
+    id
+    author
+    postId
+  }
+}
+```
+
+Let's pretend Shaggy saw this comment (that was given id 456) and wanted to upvote it:
+```
+mutation UpvoteComment{
+  upvoteComment(id:"456"){
+    id
+    upvotes
+    downvotes
+  }
+}
+```
+
+Now let's say Shaggy wanted to see all of Nadia's comments:
+```
+query GetCommentsByAuthor{
+  getCommentsByAuthor(author:"Nadia"){
+    id
+    author
+    content
+    upvotes
+    downvotes
+  }
+}
+```
+
+Say Shaggy liked what Nadia had to say, and decided to get all of her future comments:
+```
+subscription AddedCommentByAuthor{
+  addedCommentByAuthor(author:"Nadia"){
+    id
+    author
+    content
+  }
+}
+```
+
 ## License Summary
 
 This sample code is made available under a modified MIT license. See the LICENSE file.
