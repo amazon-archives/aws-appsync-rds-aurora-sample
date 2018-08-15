@@ -155,6 +155,7 @@ Resources:
           author: String!
           content: String!
           views: Int
+          comments: [Comment]
         }
 
         type Query {
@@ -484,6 +485,28 @@ Resources:
         }
       ResponseMappingTemplate: |
         $util.toJson($context.result)
+
+  AppSyncRDSResolverResolveCommentsOnPost:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncRDSAPISchema
+    Properties:
+      ApiId: !GetAtt AppSyncRDSAPI.ApiId
+      TypeName: "Post"
+      FieldName: "comments"
+      DataSourceName: !GetAtt AppSyncRDSLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version" : "2017-02-28",
+            "operation": "Invoke",
+            "payload": {
+              "sql":"SELECT * FROM posts WHERE id = :POST_ID",
+              "variableMapping": {
+                ":POST_ID" : "$context.source.id"
+              }
+            }
+        }
+      ResponseMappingTemplate: |
+        $util.toJson($context.result[0])
 
   #Lambda and access role
   AppSyncRDSLambdaExecutionRole:
