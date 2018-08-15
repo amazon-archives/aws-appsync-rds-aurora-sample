@@ -499,14 +499,14 @@ Resources:
             "version" : "2017-02-28",
             "operation": "Invoke",
             "payload": {
-              "sql":"SELECT * FROM posts WHERE id = :POST_ID",
+              "sql":"SELECT * FROM comments WHERE postId = :POST_ID ORDER BY upvotes DESC",
               "variableMapping": {
                 ":POST_ID" : "$context.source.id"
               }
             }
         }
       ResponseMappingTemplate: |
-        $util.toJson($context.result[0])
+        $util.toJson($context.result)
 
   #Lambda and access role
   AppSyncRDSLambdaExecutionRole:
