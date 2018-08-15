@@ -48,15 +48,15 @@ The sample spins up several AWS resources via CloudFormation, so step one to usi
 
 | AWS Region | Short name | | 
 | -- | -- | -- |
-| US East (Ohio) | us-east-2 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
-| US East (N. Virginia) | us-east-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
-| US West (Oregon) | us-west-2 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
-| EU (Ireland) | eu-west-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
-| EU (Frankfurt) | eu-central-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
-| Asia Pacific (Tokyo) | ap-northeast-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
-| Asia Pacific (Sydney) | ap-southeast-2 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
-| Asia Pacific (Singapore) | ap-southeast-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
-| Asia Pacific (Mumbai) | ap-south-1 |  [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-south-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/samples/rds-over-lambda-sample/appsyncrdslambdasampletemplate.yaml) |
+| US East (Ohio) | us-east-2 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
+| US East (N. Virginia) | us-east-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
+| US West (Oregon) | us-west-2 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
+| EU (Ireland) | eu-west-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
+| EU (Frankfurt) | eu-central-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
+| Asia Pacific (Tokyo) | ap-northeast-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
+| Asia Pacific (Sydney) | ap-southeast-2 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
+| Asia Pacific (Singapore) | ap-southeast-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
+| Asia Pacific (Mumbai) | ap-south-1 |  [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-south-1#/stacks/new?stackName=AWSAppSyncRDSLambdaSample&templateURL=https://s3-us-west-2.amazonaws.com/awsappsync/cf-templates/rdslambda/deploy-cfn.yml) |
 
 #### From the AppSync Console
 
@@ -70,7 +70,7 @@ If you want to customize your own version of the template, that can easily be do
 
 ##### Customizing the Lambda
 
-By default, the CloudFormation template will pull the Lambda code from an S3 bucket owned by AppSync. It's possible to simply update the Lambda code once it's deployed, which might be quicker for testing purposes, but you might want to customize the original code that gets pulled if your needs are more complex or require multiple stack builds. You can easily customize this Lambda code to fit your own needs using this repository. The entirety of what is pulled from the AppSync S3 bucket is in the src/lambdaresolver directory. Pull the contents of that directory, and customize the index.js file as needed. 
+By default, the CloudFormation template will pull the Lambda code from an S3 bucket owned by AppSync. It's possible to simply update the Lambda code once it's deployed, which might be quicker for testing purposes, but you might want to customize the code that gets used if your needs are more complex or require multiple stack builds, in which case you can easily customize the included Lambda code as needed. The entirety of what is pulled from the AppSync S3 bucket is in the src/lambdaresolver directory of this repository. Pull the contents of that directory, and customize the index.js file as needed. 
 
 Lambda requires a specific format for code it executes - it must be inside a zip file with only the contents of the lambdaresolver directory, *not a zip of the lambdaresolver directory*. You'll need to upload that zip file to an S3 bucket in your own account, and then update the CloudFormation template to point to that S3 bucket and key. Also note that you'll need to update the 'Handler' field in the same resource if you re-name index.js. Both of these fields are in the 'AppSyncRDSLambda' resource in the template. 
 
@@ -93,7 +93,7 @@ If you do change the SQL and/or GraphQL schema, you'll likely want to look at th
 
 ### Setting Up Authorization
 
-The sample uses [Cognito User Pools](https://docs.aws.amazon.com/appsync/latest/devguide/security.html#amazon-cognito-user-pools-authorization) for authorization. Now that the sample stack has been created, the next step is creating a Cognito user to sign in. The easiest way to do this is by first going to the Cognito console. From there, click 'Manage User Pools'. Next, you will see a list of different user pools under your account. By default, the sample will create one with the name 'AppSyncRDSLambdaPool' - click into that. You'll need two things from this console:
+The sample uses [Cognito User Pools](https://docs.aws.amazon.com/appsync/latest/devguide/security.html#amazon-cognito-user-pools-authorization) for authorization. Now that the sample stack has been created, the next step is creating a Cognito user to sign in. You can do this programatically, but the easiest way to do this is via the Cognito console. Go there, then click 'Manage User Pools'. Next, you will see a list of different user pools under your account. By default, the sample will create one with the name 'AppSyncRDSLambdaPool' - click into that. You'll need two things from this console:
 
 #### Client Id
 The CloudFormation stack will automatically create the client resource for you. You can get it by clicking 'App clients', in which it will be under the text 'App client id'.
@@ -111,7 +111,7 @@ There's one last step before you're ready to play with the sample. Go to the App
 
 ![Sign in](images/signin-appsync.png)
 
-Once you sign in with the username and temporary password you used, the console will prompt you to give a new password. This is normal for 'admin-created users'. We have to change it once to get the user out of state 'FORCE_CHANGE_PASSWORD'. Use whatever password you like - this will be permanent.
+Once you sign in with the client id, username, and temporary password you used, the console will prompt you to give a new password. This is normal for 'admin-created users'. We have to change it once to get the user out of state 'FORCE_CHANGE_PASSWORD'. Use whatever password you like - this will be permanent.
 
 ![Changing password](images/signin-appsync-2.png)
 
@@ -119,10 +119,10 @@ Once you sign in with the username and temporary password you used, the console 
 
 Now you're free to use the sample! Here's some queries and mutations to get you started:
 
-Create a new post:
+Hypothetical author Shaggy creates a new post:
 ```
 mutation CreatePost{
-  createPost(author:"Shaggy", content:"Test Post"){
+  createPost(author:"Shaggy", content:"Hello there"){
     id
     author
     content
@@ -132,7 +132,7 @@ mutation CreatePost{
 ```
 Let's say the id that was returned was "123"
 
-Increment the view count of that post:
+Hypothetical reader Nadia pulls up that post, running both of the below commands: 
 ```
 mutation IncrementViewCount{
   incrementViewCount(id:"123"){
@@ -140,24 +140,26 @@ mutation IncrementViewCount{
     views
   }
 }
-```
 
-Then to get that post:
-```
 query GetPost{
   getPost(id:"123"){
     id
     author
     content
     views
+    comments {
+      id
+      author
+      content
+    }  
   }
 }
 ```
 
-Now, let's comment on that post:
+Now, let's say Nadia liked the post enough to leave a comment on it:
 ```
 mutation CreateComment{
-  createComment(postId:"123", author:"Nadia", content:"Test"){
+  createComment(postId:"123", author:"Nadia", content:"Great stuff"){
     id
     author
     postId
