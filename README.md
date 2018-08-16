@@ -201,6 +201,7 @@ subscription AddedCommentByAuthor{
   }
 }
 ```
+Note: subscriptions are long-running processes that won't show anything until a mutation runs. To do this, you'll need two tabs in the AppSync console - one to execure the subscription and then a second to execute the mutation. Additionally, AppSync requires that filters in subscriptions be in the response of the mutation, so createComment must return author to do this.
 
 
 ## License Summary
