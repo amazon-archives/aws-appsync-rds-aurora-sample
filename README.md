@@ -1,5 +1,9 @@
 # AWS AppSync Using Amazon Aurora as a Data Source via AWS Lambda
 
+## Aurora Serverless Data Sources
+
+As of 11/20/2018, AWS AppSync supports Aurora Serverless as a native data source. More information is available here: [Relational database data sources](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-rds-resolvers.html)
+
 ## Introduction
 
 This sample application will create all of the AWS resources you need to have an AppSync GraphQL API that fronts an RDS Aurora cluster, doing so via a Lambda function. All resources are created with AWS CloudFormation. 
