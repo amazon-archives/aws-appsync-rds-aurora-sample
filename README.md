@@ -32,7 +32,7 @@ The schema is a light blog design - the out of the box types are 'Posts' and 'Co
 * GraphQL Subscriptions
   * Real time updates for comments added to a post
   * Real time updates for comments added by an author
-  * Real time udpates for posts added by an author
+  * Real time updates for posts added by an author
   
 * Authorization
   * This sample app uses Cognito User Pools as the authorization mechanism
