@@ -232,7 +232,7 @@ Resources:
         S3Key: samples/rds-over-lambda-sample/AppSyncRDSLambdaSampleCode.zip
       Handler: index.handler
       MemorySize: 256
-      Runtime: "nodejs8.10"
+      Runtime: "nodejs12.x"
       Timeout: "60"
       ReservedConcurrentExecutions: 100
       Tags:
